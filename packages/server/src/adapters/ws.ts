@@ -82,21 +82,25 @@ function parseMessage(
 /**
  * Web socket server handler
  */
-export type WSSHandlerOptions<TRouter extends AnyRouter> = BaseHandlerOptions<
+export type WSSHandlerOptions<TRouter extends AnyRouter, TRequest extends http.IncomingMessage , TWss extends ws.Server> = BaseHandlerOptions<
   TRouter,
-  http.IncomingMessage
+  TRequest
 > & {
-  wss: ws.Server;
+  wss: TWss;
   process?: NodeJS.Process;
-} & NodeHTTPCreateContextOption<TRouter, http.IncomingMessage, ws>;
+  shit: TRequest
+} & NodeHTTPCreateContextOption<TRouter, TRequest, ws>;
 
-export function applyWSSHandler<TRouter extends AnyRouter>(
-  opts: WSSHandlerOptions<TRouter>,
+export function applyWSSHandler<TRouter extends AnyRouter, TRequest extends http.IncomingMessage, TWss extends ws.Server>(
+  opts: WSSHandlerOptions<TRouter, TRequest, TWss>,
 ) {
   const { wss, createContext, router } = opts;
 
+
+
   const { transformer } = router._def;
-  wss.on('connection', async (client, req) => {
+  wss.on('connection', async (client, treq) => {
+    let req = treq as TRequest;
     const clientSubscriptions = new Map<
       number | string,
       Subscription<TRouter>
